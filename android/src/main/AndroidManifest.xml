@@ -1,3 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="com.faceAI.face_ai_sdk">
+    package="com.faceAI.face_ai_sdk">
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
+    <uses-permission android:name="com.android.vending.CHECK_LICENSE" />
+
+    <application>
+        <activity
+            android:name="com.faceAI.demo.SysCamera.verify.FaceVerificationActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.FaceAISDK.Fullscreen" />
+
+        <activity
+            android:name="com.faceAI.demo.SysCamera.verify.LivenessDetectActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.FaceAISDK.Fullscreen" />
+
+        <activity
+            android:name="com.faceAI.demo.SysCamera.addFace.AddFaceFeatureActivity"
+            android:exported="false"
+            android:theme="@style/FaceAITheme" />
+    </application>
+
 </manifest>
