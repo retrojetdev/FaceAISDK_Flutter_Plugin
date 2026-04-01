@@ -14,6 +14,7 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry
 import com.faceAI.face_ai_sdk.FaceSDKConfig
+import com.ai.face.core.engine.FaceAISDKEngine
 import com.faceAI.face_ai_sdk.SysCamera.verify.FaceVerificationActivity
 import com.faceAI.face_ai_sdk.SysCamera.verify.LivenessDetectActivity
 import com.faceAI.face_ai_sdk.SysCamera.addFace.AddFaceFeatureActivity
@@ -94,7 +95,10 @@ class FaceAiSdkPlugin :
             return
         }
         try {
-            FaceSDKConfig.init(currentActivity.applicationContext)
+            val appContext = currentActivity.applicationContext
+            FaceSDKConfig.init(appContext)
+            // Pre-initialize the native face AI engine to load model before any Activity uses it
+            FaceAISDKEngine.getInstance(appContext)
             isSDKInitialized = true
             result.success("SDK initialized successfully")
         } catch (e: Exception) {
