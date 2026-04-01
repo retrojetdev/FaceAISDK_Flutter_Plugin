@@ -2,7 +2,7 @@ group = "com.faceAI.face_ai_sdk"
 version = "1.0-SNAPSHOT"
 
 buildscript {
-    ext.kotlin_version = "2.1.0"
+    ext.kotlin_version = "1.9.22"
     repositories {
         google()
         mavenCentral()
@@ -18,6 +18,9 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url "https://s01.oss.sonatype.org/content/groups/public" }
+        maven { url "https://jitpack.io" }
+        maven { url 'https://repo1.maven.org/maven2/' }
     }
 }
 
@@ -27,27 +30,45 @@ apply plugin: "kotlin-android"
 android {
     namespace = "com.faceAI.face_ai_sdk"
 
-    compileSdk = 36
+    compileSdk = 35
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11
+        jvmTarget = "17"
     }
 
     sourceSets {
         main.java.srcDirs += "src/main/kotlin"
+        main.java.srcDirs += "src/main/java"
         test.java.srcDirs += "src/test/kotlin"
     }
 
     defaultConfig {
-        minSdk = 24
+        minSdk = 21
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+    }
+
+    buildFeatures {
+        viewBinding true
     }
 
     dependencies {
+        api 'io.github.faceaisdk:Android:2026.03.27'
+
+        implementation 'com.google.code.gson:gson:2.13.2'
+        implementation 'com.tencent:mmkv:1.3.14'
+        implementation 'pub.devrel:easypermissions:3.0.0'
+        implementation 'com.airbnb.android:lottie:6.5.2'
+        implementation 'com.github.bumptech.glide:glide:4.16.0'
+        implementation 'androidx.appcompat:appcompat:1.6.0'
+        implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+
         testImplementation("org.jetbrains.kotlin:kotlin-test")
         testImplementation("org.mockito:mockito-core:5.0.0")
     }
@@ -55,12 +76,21 @@ android {
     testOptions {
         unitTests.all {
             useJUnitPlatform()
-
             testLogging {
                events "passed", "skipped", "failed", "standardOut", "standardError"
                outputs.upToDateWhen {false}
                showStandardStreams = true
             }
         }
+    }
+}
+
+def camera_version = "1.4.2"
+configurations.configureEach {
+    resolutionStrategy {
+        force "androidx.camera:camera-core:$camera_version",
+                "androidx.camera:camera-camera2:$camera_version",
+                "androidx.camera:camera-lifecycle:$camera_version",
+                "androidx.camera:camera-view:$camera_version"
     }
 }
