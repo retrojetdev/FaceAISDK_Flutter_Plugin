@@ -4,7 +4,6 @@ import '../theme/app_theme.dart';
 import '../pages/dashboard_page.dart';
 import '../pages/verify_page.dart';
 import '../pages/search_page.dart';
-import '../pages/setting_page.dart';
 import '../pages/data_page.dart';
 
 class MainShell extends StatefulWidget {

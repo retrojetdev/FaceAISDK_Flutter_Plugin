@@ -32,13 +32,12 @@ class _DataPageState extends State<DataPage> {
       await _faceAiSdk.initializeSDK({'apiKey': 'demo-key'});
       if (!mounted) return;
 
-      final result = await _faceAiSdk.startEnroll(faceId);
+      final result = await _faceAiSdk.startEnroll(faceId: faceId);
       if (!mounted) return;
 
       setState(() {
-        _enrollResult = result;
-        _enrollState =
-            (result != null) ? _EnrollState.success : _EnrollState.error;
+        _enrollResult = result.toString();
+        _enrollState = _EnrollState.success;
       });
     } catch (e) {
       if (!mounted) return;

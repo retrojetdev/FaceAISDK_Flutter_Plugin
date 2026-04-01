@@ -45,7 +45,7 @@ import com.ai.face.faceSearch.searchByFeature.FeatureSearchResult;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.faceAI.demo.FaceSDKConfig;
-import com.faceAI.demo.R;
+import com.faceAI.face_ai_sdk.R;
 import com.faceAI.demo.SysCamera.camera.FaceCameraXFragment;
 import com.faceAI.demo.base.AbsBaseActivity;
 import com.tencent.mmkv.MMKV;

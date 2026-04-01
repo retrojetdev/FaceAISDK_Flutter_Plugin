@@ -20,7 +20,7 @@ import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
 import com.ai.face.base.view.camera.AbsFaceCameraXFragment;
 import com.ai.face.base.view.camera.CameraXBuilder;
-import com.faceAI.demo.R;
+import com.faceAI.face_ai_sdk.R;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.ExecutionException;

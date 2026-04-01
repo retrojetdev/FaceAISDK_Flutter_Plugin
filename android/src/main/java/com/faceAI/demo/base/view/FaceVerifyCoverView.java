@@ -22,7 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
-import com.faceAI.demo.R;
+import com.faceAI.face_ai_sdk.R;
 import com.faceAI.demo.base.utils.ScreenUtils;
 
 /**

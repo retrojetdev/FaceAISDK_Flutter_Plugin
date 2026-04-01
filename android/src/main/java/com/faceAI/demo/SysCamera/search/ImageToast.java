@@ -13,7 +13,7 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
-import com.faceAI.demo.R;
+import com.faceAI.face_ai_sdk.R;
 import com.faceAI.demo.base.utils.BitmapUtils;
 
 public class ImageToast {
