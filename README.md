@@ -19,17 +19,6 @@ All processing is on-device. No internet required.
 - `armeabi-v7a` (32-bit ARM) or `arm64-v8a` (64-bit ARM) device
 - Camera permission
 
-## Installation
-
-Add to your `pubspec.yaml`:
-
-```yaml
-dependencies:
-  face_ai_sdk:
-    git:
-      url: https://github.com/your-repo/FaceAISDK_Flutter_Plugin.git
-```
-
 ## Android Setup (Required)
 
 ### 1. AndroidManifest.xml
@@ -215,8 +204,6 @@ The SDK validates your app's **package name + signing certificate**. If they don
 1. Your `applicationId` is registered with FaceAISDK
 2. Your signing keystore is registered with FaceAISDK
 3. `android:extractNativeLibs="true"` is set in AndroidManifest.xml
-4. `noCompress` is configured for model files in build.gradle
-
 ### Camera not working
 
 Ensure camera permission is granted at runtime. The plugin declares `<uses-permission android:name="android.permission.CAMERA" />` automatically.

@@ -19,17 +19,6 @@ Semua proses dilakukan di perangkat. Tidak memerlukan internet.
 - Perangkat `armeabi-v7a` (ARM 32-bit) atau `arm64-v8a` (ARM 64-bit)
 - Izin kamera
 
-## Instalasi
-
-Tambahkan ke `pubspec.yaml`:
-
-```yaml
-dependencies:
-  face_ai_sdk:
-    git:
-      url: https://github.com/your-repo/FaceAISDK_Flutter_Plugin.git
-```
-
 ## Konfigurasi Android (Wajib)
 
 ### 1. AndroidManifest.xml
@@ -215,8 +204,6 @@ SDK memvalidasi **nama paket + sertifikat signing** aplikasi Anda. Jika tidak co
 1. `applicationId` Anda terdaftar di FaceAISDK
 2. Keystore signing Anda terdaftar di FaceAISDK
 3. `android:extractNativeLibs="true"` diset di AndroidManifest.xml
-4. `noCompress` dikonfigurasi untuk file model di build.gradle
-
 ### Kamera tidak berfungsi
 
 Pastikan izin kamera diberikan saat runtime. Plugin mendeklarasikan `<uses-permission android:name="android.permission.CAMERA" />` secara otomatis.
