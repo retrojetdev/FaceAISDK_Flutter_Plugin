@@ -27,10 +27,6 @@ android {
         versionName = flutter.versionName
     }
 
-    androidResources {
-        noCompress += listOf("model", "bin", "param", "tfl")
-    }
-
     signingConfigs {
         create("faceai") {
             storeFile = file("FaceAIPublic")

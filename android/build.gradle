@@ -54,10 +54,6 @@ android {
         }
     }
 
-    aaptOptions {
-        noCompress "model", "bin", "param", "tfl"
-    }
-
     buildFeatures {
         buildConfig = true
         dataBinding = true
