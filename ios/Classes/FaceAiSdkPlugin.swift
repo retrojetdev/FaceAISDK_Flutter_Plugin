@@ -337,8 +337,6 @@ public class FaceAiSdkPlugin: NSObject, FlutterPlugin {
     // MARK: - Helper: Message for Code
 
     private func messageForCode(_ code: Int) -> String {
-        let key = "Face_Tips_Code_\(code)"
-        let defaultValue = "Code \(code)"
-        return NSLocalizedString(key, value: defaultValue, comment: "")
+        return FaceAILocalization.localizedTip(for: code, defaultPrefix: "Code")
     }
 }

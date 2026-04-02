@@ -20,9 +20,7 @@ struct LivenessDetectView: View {
     let onDismiss: (Int, Float, UIImage?) -> Void
 
     private func localizedTip(for code: Int) -> String {
-        let key = "Face_Tips_Code_\(code)"
-        let defaultValue = "LivenessDetect Tips Code=\(code)"
-        return NSLocalizedString(key, value: defaultValue, comment: "")
+        return FaceAILocalization.localizedTip(for: code, defaultPrefix: "LivenessDetect")
     }
 
     private func close() {
@@ -117,7 +115,7 @@ struct LivenessDetectView: View {
                                 close()
                             }
                         }) {
-                            Text("Confirm")
+                            Text(FaceAILocalization.localized("Confirm"))
                                 .font(.system(size: 18).bold())
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)

@@ -24,9 +24,7 @@ struct VerifyFaceView: View {
     let onDismiss: (Int, Float, Float, UIImage?) -> Void
 
     private func localizedTip(for code: Int) -> String {
-        let key = "Face_Tips_Code_\(code)"
-        let defaultValue = "VerifyFace Tips Code=\(code)"
-        return NSLocalizedString(key, value: defaultValue, comment: "")
+        return FaceAILocalization.localizedTip(for: code, defaultPrefix: "VerifyFace")
     }
 
     private func close() {
@@ -122,7 +120,7 @@ struct VerifyFaceView: View {
                                 close()
                             }
                         }) {
-                            Text("Confirm")
+                            Text(FaceAILocalization.localized("Confirm"))
                                 .font(.system(size: 18).bold())
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
@@ -159,7 +157,7 @@ struct VerifyFaceView: View {
             }
 
             guard let feature = faceFeature else {
-                toastViewTips = "No Face Feature for key: \(faceID)"
+                toastViewTips = FaceAILocalization.localized("No Face Feature")
                 showToast = true
 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {

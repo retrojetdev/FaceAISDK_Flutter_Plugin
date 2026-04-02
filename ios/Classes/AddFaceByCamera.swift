@@ -19,9 +19,7 @@ public struct AddFaceByCamera: View {
     @StateObject private var viewModel: AddFaceByCameraModel = AddFaceByCameraModel()
 
     private func localizedTip(for code: Int) -> String {
-        let key = "Face_Tips_Code_\(code)"
-        let defaultValue = "Add Face Tips Code=\(code)"
-        return NSLocalizedString(key, value: defaultValue, comment: "")
+        return FaceAILocalization.localizedTip(for: code, defaultPrefix: "AddFace")
     }
 
     private func close() {
@@ -136,7 +134,7 @@ struct ConfirmAddFaceDialog: View {
 
     var body: some View {
         VStack(alignment: .center, spacing: 15) {
-            Text("Confirm Add Face")
+            Text(FaceAILocalization.localized("Confirm Add Face"))
                 .font(.system(size: 19, weight: .semibold))
                 .foregroundColor(Color.faceMain)
                 .padding(.top, 16)
@@ -152,7 +150,7 @@ struct ConfirmAddFaceDialog: View {
                 )
                 .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
 
-            Text("Ensure face is clear")
+            Text(FaceAILocalization.localized("Ensure face is clear"))
                 .font(.system(size: 15))
                 .foregroundColor(.gray)
                 .multilineTextAlignment(.center)
@@ -162,7 +160,7 @@ struct ConfirmAddFaceDialog: View {
                 Button(action: {
                     viewModel.reInit()
                 }) {
-                    Text("Retry")
+                    Text(FaceAILocalization.localized("Retry"))
                         .font(.system(size: 16, weight: .medium))
                         .frame(maxWidth: .infinity)
                         .frame(height: 44)
@@ -174,7 +172,7 @@ struct ConfirmAddFaceDialog: View {
                 Button(action: {
                     onConfirm()
                 }) {
-                    Text("Confirm")
+                    Text(FaceAILocalization.localized("Confirm"))
                         .font(.system(size: 16, weight: .bold))
                         .frame(maxWidth: .infinity)
                         .frame(height: 44)
