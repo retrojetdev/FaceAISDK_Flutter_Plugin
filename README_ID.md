@@ -15,8 +15,8 @@ Semua proses dilakukan di perangkat. Tidak memerlukan internet.
 
 ## Persyaratan
 
-- Android `minSdk >= 21`
-- Perangkat `arm64-v8a` (ARM 64-bit)
+- Android `minSdk >= 24`
+- Perangkat `armeabi-v7a` (ARM 32-bit) atau `arm64-v8a` (ARM 64-bit)
 - Izin kamera
 
 ## Instalasi

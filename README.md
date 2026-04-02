@@ -15,8 +15,8 @@ All processing is on-device. No internet required.
 
 ## Requirements
 
-- Android `minSdk >= 21`
-- `arm64-v8a` device (64-bit ARM)
+- Android `minSdk >= 24`
+- `armeabi-v7a` (32-bit ARM) or `arm64-v8a` (64-bit ARM) device
 - Camera permission
 
 ## Installation
