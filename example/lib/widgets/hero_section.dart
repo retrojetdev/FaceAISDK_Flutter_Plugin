@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:face_ai_sdk/face_ai_sdk.dart';
 
 import '../theme/app_theme.dart';
 
@@ -78,7 +79,11 @@ class HeroSection extends StatelessWidget {
                   children: [
                     _PrimaryButton(
                       label: 'Start Testing',
-                      onTap: () {},
+                      onTap: () async {
+                        final sdk = FaceAiSdk();
+                        await sdk.initializeSDK({'apiKey': 'demo-key'});
+                        await sdk.startLiveness();
+                      },
                     ),
                     _SecondaryButton(
                       label: 'View Documentation',

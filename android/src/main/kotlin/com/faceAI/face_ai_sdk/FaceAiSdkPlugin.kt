@@ -128,8 +128,10 @@ class FaceAiSdkPlugin :
         }
 
         val faceId = call.argument<String>("faceId")
-        if (faceId == null) {
-            result.error("INVALID_ARGS", "faceId is required", null)
+        val faceFeature = call.argument<String>("faceFeature")
+
+        if (faceId.isNullOrEmpty() && faceFeature.isNullOrEmpty()) {
+            result.error("INVALID_ARGS", "At least one of faceId or faceFeature is required", null)
             return
         }
 
@@ -137,12 +139,18 @@ class FaceAiSdkPlugin :
         pendingFormat = call.argument<String>("format") ?: "base64"
 
         val intent = Intent(currentActivity, FaceVerificationActivity::class.java).apply {
-            putExtra(FaceVerificationActivity.USER_FACE_ID_KEY, faceId)
+            if (!faceId.isNullOrEmpty()) {
+                putExtra(FaceVerificationActivity.USER_FACE_ID_KEY, faceId)
+            }
+            if (!faceFeature.isNullOrEmpty()) {
+                putExtra(FaceVerificationActivity.USER_FACE_FEATURE, faceFeature)
+            }
             putExtra(FaceVerificationActivity.THRESHOLD_KEY, (call.argument<Double>("threshold") ?: 0.85).toFloat())
             putExtra(FaceVerificationActivity.FACE_LIVENESS_TYPE, call.argument<Int>("livenessType") ?: 0)
             putExtra(FaceVerificationActivity.MOTION_STEP_SIZE, call.argument<Int>("motionStepSize") ?: 1)
             putExtra(FaceVerificationActivity.MOTION_TIMEOUT, call.argument<Int>("motionTimeout") ?: 10)
             putExtra(FaceVerificationActivity.MOTION_LIVENESS_TYPES, call.argument<String>("motionTypes") ?: "1,2,3")
+            putExtra(FaceVerificationActivity.ALLOW_RETRY, call.argument<Boolean>("allowRetry") ?: true)
         }
         currentActivity.startActivityForResult(intent, VERIFICATION_REQUEST)
     }
@@ -194,6 +202,7 @@ class FaceAiSdkPlugin :
             putExtra(FaceVerificationActivity.USER_FACE_ID_KEY, faceId)
             putExtra(AddFaceFeatureActivity.ADD_FACE_IMAGE_TYPE_KEY, AddFaceFeatureActivity.AddFaceImageTypeEnum.FACE_VERIFY.name)
             putExtra(AddFaceFeatureActivity.NEED_CONFIRM_ADD_FACE, false)
+            putExtra(AddFaceFeatureActivity.ADD_FACE_PERFORMANCE_MODE, call.argument<Int>("performanceMode") ?: 2)
         }
         currentActivity.startActivityForResult(intent, ENROLL_REQUEST)
     }
@@ -239,13 +248,14 @@ class FaceAiSdkPlugin :
             return true
         }
 
-        val faceImageStr = loadFaceLogImage(requestCode)
+        val faceId = data.getStringExtra("faceID")
+        val faceImageStr = loadFaceLogImage(requestCode, faceId)
 
         when (requestCode) {
             VERIFICATION_REQUEST -> {
                 val resultMap = hashMapOf<String, Any?>(
                     "code" to data.getIntExtra("code", 0),
-                    "faceID" to (data.getStringExtra("faceID") ?: ""),
+                    "faceID" to (faceId ?: ""),
                     "msg" to (data.getStringExtra("msg") ?: ""),
                     "similarity" to data.getFloatExtra("similarity", 0f).toDouble(),
                     "livenessValue" to data.getFloatExtra("livenessValue", 0f).toDouble(),
@@ -265,8 +275,9 @@ class FaceAiSdkPlugin :
             ENROLL_REQUEST, ADD_FACE_REQUEST -> {
                 val resultMap = hashMapOf<String, Any?>(
                     "code" to data.getIntExtra("code", 0),
-                    "faceID" to (data.getStringExtra("faceID") ?: ""),
+                    "faceID" to (faceId ?: ""),
                     "msg" to (data.getStringExtra("msg") ?: ""),
+                    "faceFeature" to (data.getStringExtra("faceFeature") ?: ""),
                     "faceImage" to faceImageStr,
                 )
                 result.success(resultMap)
@@ -275,16 +286,16 @@ class FaceAiSdkPlugin :
         return true
     }
 
-    private fun loadFaceLogImage(requestCode: Int): String? {
+    private fun loadFaceLogImage(requestCode: Int, faceId: String? = null): String? {
         val ctx = activity?.applicationContext ?: return null
-        val logDir = ctx.filesDir.path + "/FaceAI/Log/"
 
-        val fileName = when (requestCode) {
-            VERIFICATION_REQUEST -> "verifyBitmap"
-            LIVENESS_REQUEST -> "liveBitmap"
+        val targetFile = when (requestCode) {
+            VERIFICATION_REQUEST -> File(ctx.filesDir.path + "/FaceAI/Log/", "verifyBitmap")
+            LIVENESS_REQUEST -> File(ctx.filesDir.path + "/FaceAI/Log/", "liveBitmap")
+            ENROLL_REQUEST -> if (faceId != null) File(FaceSDKConfig.CACHE_BASE_FACE_DIR, faceId) else return null
+            ADD_FACE_REQUEST -> if (faceId != null) File(FaceSDKConfig.CACHE_SEARCH_FACE_DIR, faceId) else return null
             else -> return null
         }
-        val targetFile = File(logDir, fileName)
         if (!targetFile.exists()) return null
 
         return when (pendingFormat) {

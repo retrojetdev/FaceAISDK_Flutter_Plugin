@@ -25,12 +25,14 @@ abstract class FaceAiSdkPlatform extends PlatformInterface {
   }
 
   Future<Map<String, dynamic>> startVerification({
-    required String faceId,
+    String? faceId,
+    String? faceFeature,
     double threshold = 0.85,
     int livenessType = 0,
     int motionStepSize = 1,
     int motionTimeout = 10,
     String motionTypes = "1,2,3",
+    bool allowRetry = true,
     String format = "base64",
   }) {
     throw UnimplementedError('startVerification() has not been implemented.');
@@ -48,6 +50,7 @@ abstract class FaceAiSdkPlatform extends PlatformInterface {
 
   Future<Map<String, dynamic>> startEnroll({
     required String faceId,
+    int performanceMode = 2,
     String format = "base64",
   }) {
     throw UnimplementedError('startEnroll() has not been implemented.');

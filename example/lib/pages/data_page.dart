@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:face_ai_sdk/face_ai_sdk.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/person_face.dart';
 import '../theme/app_theme.dart';
 
 class DataPage extends StatefulWidget {
@@ -12,14 +16,38 @@ class DataPage extends StatefulWidget {
 }
 
 class _DataPageState extends State<DataPage> {
+  static const _spKey = 'registered_faces';
+
   final _nameController = TextEditingController();
   final _faceAiSdk = FaceAiSdk();
   _EnrollState _enrollState = _EnrollState.idle;
-  String? _enrollResult;
+  List<PersonFace> _faces = [];
 
   bool get _canEnroll =>
       _nameController.text.trim().isNotEmpty &&
       _enrollState != _EnrollState.loading;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFaces();
+  }
+
+  Future<void> _loadFaces() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList(_spKey) ?? [];
+    setState(() {
+      _faces = list.map(PersonFace.decode).toList();
+    });
+  }
+
+  Future<void> _saveFaces() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _spKey,
+      _faces.map((f) => f.encode()).toList(),
+    );
+  }
 
   Future<void> _enroll() async {
     if (!_canEnroll) return;
@@ -28,31 +56,41 @@ class _DataPageState extends State<DataPage> {
     setState(() => _enrollState = _EnrollState.loading);
 
     try {
-      // Initialize SDK before each enrollment
       await _faceAiSdk.initializeSDK({'apiKey': 'demo-key'});
       if (!mounted) return;
 
       final result = await _faceAiSdk.startEnroll(faceId: faceId);
       if (!mounted) return;
 
-      setState(() {
-        _enrollResult = result.toString();
-        _enrollState = _EnrollState.success;
-      });
+      final code = result['code'] as int? ?? 0;
+      if (code == 1) {
+        final person = PersonFace(
+          faceId: faceId,
+          faceFeature: (result['faceFeature'] as String?) ?? '',
+          facePath: (result['faceImage'] as String?) ?? '',
+        );
+        _faces.insert(0, person);
+        await _saveFaces();
+        _nameController.clear();
+        setState(() => _enrollState = _EnrollState.success);
+      } else {
+        setState(() => _enrollState = _EnrollState.error);
+      }
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _enrollResult = e.toString();
-        _enrollState = _EnrollState.error;
-      });
+      setState(() => _enrollState = _EnrollState.error);
     }
 
-    // Auto-dismiss feedback after 4 seconds
-    Future.delayed(const Duration(seconds: 4), () {
+    Future.delayed(const Duration(seconds: 3), () {
       if (mounted && _enrollState != _EnrollState.loading) {
         setState(() => _enrollState = _EnrollState.idle);
       }
     });
+  }
+
+  Future<void> _deleteFace(int index) async {
+    setState(() => _faces.removeAt(index));
+    await _saveFaces();
   }
 
   @override
@@ -271,8 +309,7 @@ class _DataPageState extends State<DataPage> {
                     icon: Icons.check_circle_rounded,
                     iconColor: AppColors.primary,
                     bgColor: AppColors.primary.withValues(alpha: 0.1),
-                    title: 'Face Enrolled',
-                    subtitle: _enrollResult ?? 'Face data stored successfully.',
+                    title: 'Face Enrolled Successfully',
                   )
                 : _enrollState == _EnrollState.error
                     ? _FeedbackCard(
@@ -281,10 +318,60 @@ class _DataPageState extends State<DataPage> {
                         iconColor: AppColors.error,
                         bgColor: AppColors.error.withValues(alpha: 0.1),
                         title: 'Enrollment Failed',
-                        subtitle: _enrollResult ?? 'Unknown error occurred.',
                       )
                     : const SizedBox.shrink(),
           ),
+
+          const SizedBox(height: 32),
+
+          // ── Registered Faces Grid ──
+          if (_faces.isNotEmpty) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'REGISTERED FACES',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1.8,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${_faces.length} subject${_faces.length == 1 ? '' : 's'}',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 0.78,
+              ),
+              itemCount: _faces.length,
+              itemBuilder: (context, i) => _RegisteredFaceTile(
+                face: _faces[i],
+                onDelete: () => _deleteFace(i),
+              ),
+            ),
+          ],
 
           const SizedBox(height: 24),
         ],
@@ -300,7 +387,6 @@ class _FeedbackCard extends StatelessWidget {
   final Color iconColor;
   final Color bgColor;
   final String title;
-  final String subtitle;
 
   const _FeedbackCard({
     super.key,
@@ -308,7 +394,6 @@ class _FeedbackCard extends StatelessWidget {
     required this.iconColor,
     required this.bgColor,
     required this.title,
-    required this.subtitle,
   });
 
   @override
@@ -320,7 +405,6 @@ class _FeedbackCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.all(8),
@@ -331,28 +415,116 @@ class _FeedbackCard extends StatelessWidget {
             child: Icon(icon, color: iconColor, size: 22),
           ),
           const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
+          Text(
+            title,
+            style: GoogleFonts.manrope(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: iconColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Registered Face Tile ──
+
+class _RegisteredFaceTile extends StatelessWidget {
+  final PersonFace face;
+  final VoidCallback onDelete;
+
+  const _RegisteredFaceTile({
+    required this.face,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasImage =
+        face.facePath.isNotEmpty && File(face.facePath).existsSync();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF191C1B).withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Face image
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainerHighest,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: hasImage
+                      ? Image.file(
+                          File(face.facePath),
+                          fit: BoxFit.cover,
+                        )
+                      : const Center(
+                          child: Icon(
+                            Icons.person_rounded,
+                            color: AppColors.outline,
+                            size: 36,
+                          ),
+                        ),
+                ),
+              ),
+
+              // Name
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                child: Text(
+                  face.faceId,
                   style: GoogleFonts.manrope(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: iconColor,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
                     fontSize: 13,
-                    color: AppColors.onSurfaceVariant,
-                    height: 1.4,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.onSurface,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                 ),
-              ],
+              ),
+            ],
+          ),
+
+          // Delete button
+          Positioned(
+            top: 6,
+            right: 6,
+            child: GestureDetector(
+              onTap: onDelete,
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.45),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.close_rounded,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
             ),
           ),
         ],

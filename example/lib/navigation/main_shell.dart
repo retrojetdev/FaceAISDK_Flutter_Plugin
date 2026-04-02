@@ -16,12 +16,16 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
-  final _pages = const [
-    DashboardPage(),
-    VerifyPage(),
-    SearchPage(),
-    DataPage(),
+  late final List<Widget> _pages = [
+    DashboardPage(onSwitchTab: _switchTab),
+    const VerifyPage(),
+    const SearchPage(),
+    const DataPage(),
   ];
+
+  void _switchTab(int index) {
+    setState(() => _currentIndex = index);
+  }
 
   @override
   Widget build(BuildContext context) {

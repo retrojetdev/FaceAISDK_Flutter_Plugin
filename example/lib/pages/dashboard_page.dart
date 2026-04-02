@@ -14,7 +14,9 @@ import '../widgets/recent_history_card.dart';
 import '../widgets/sdk_update_card.dart';
 
 class DashboardPage extends StatefulWidget {
-  const DashboardPage({super.key});
+  final void Function(int index)? onSwitchTab;
+
+  const DashboardPage({super.key, this.onSwitchTab});
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -107,36 +109,44 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ),
           const SizedBox(height: 16),
-          const FeatureCard(
+          FeatureCard(
             icon: Icons.face_unlock_rounded,
             title: 'Verify',
             description:
                 '1:1 matching engine for identity confirmation. Compare live '
                 'frames against stored biometric templates.',
+            onTap: () => widget.onSwitchTab?.call(1),
           ),
           const SizedBox(height: 12),
-          const FeatureCard(
+          FeatureCard(
             icon: Icons.person_search_rounded,
             title: 'Search',
             description:
                 '1:N recognition across large-scale datasets. Locate specific '
                 'identities within millisecond response times.',
+            onTap: () => widget.onSwitchTab?.call(2),
           ),
           const SizedBox(height: 12),
-          const FeatureCard(
+          FeatureCard(
             icon: Icons.verified_user_rounded,
             title: 'Liveness Detection',
             description:
                 'Anti-spoofing technology to detect photos, masks, or digital '
                 'replays. Ensures a human is physically present.',
+            onTap: () async {
+              await _sdk.initializeSDK({'apiKey': 'demo-key'});
+              if (!mounted) return;
+              await _sdk.startLiveness();
+            },
           ),
           const SizedBox(height: 12),
-          const FeatureCard(
+          FeatureCard(
             icon: Icons.fingerprint_rounded,
             title: 'Data',
             description:
                 'Enroll new identities into the biometric vault. Cleanse and '
                 'optimize facial landmarks for better accuracy.',
+            onTap: () => widget.onSwitchTab?.call(3),
           ),
 
           // Use Cases
@@ -152,8 +162,6 @@ class _DashboardPageState extends State<DashboardPage> {
           const SdkModulesSection(),
 
           // Bottom insights row
-          const SizedBox(height: 40),
-          const RecentHistoryCard(),
           const SizedBox(height: 16),
           const SdkUpdateCard(),
         ],

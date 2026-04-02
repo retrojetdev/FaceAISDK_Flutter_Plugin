@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Log
 import android.os.Handler
 import android.os.Looper
 import android.view.LayoutInflater
@@ -56,19 +57,23 @@ class FaceVerificationActivity : AbsBaseActivity() {
 
     companion object {
         const val USER_FACE_ID_KEY = "USER_FACE_ID_KEY"   //1:1 face verify ID KEY
+        const val USER_FACE_FEATURE = "USER_FACE_FEATURE" //1:1 face verify feature passed directly
         const val THRESHOLD_KEY = "THRESHOLD_KEY"           //人脸识别通过的阈值
         const val FACE_LIVENESS_TYPE = "FACE_LIVENESS_TYPE"   //活体检测的类型
         const val MOTION_STEP_SIZE = "MOTION_STEP_SIZE"   //动作活体的步骤数
         const val MOTION_TIMEOUT = "MOTION_TIMEOUT"   //动作活体超时数据
         const val MOTION_LIVENESS_TYPES = "MOTION_LIVENESS_TYPES" //动作活体种类
+        const val ALLOW_RETRY = "ALLOW_RETRY" //timeout时是否允许retry
     }
 
     private var faceID: String? = null //你的业务系统中可以唯一定义一个账户的ID，手机号/身份证号等
+    private var passedFaceFeature: String? = null //从Flutter直接传递的人脸特征值
     private var verifyThreshold = 0.85f //1:1 人脸识别对比通过的阈值，根据使用场景自行调整
     private var motionStepSize = 1 //动作活体的个数
     private var motionTimeOut = motionStepSize * 3 + 1  //动作超时秒，低端机可以设置长一点
     private var motionLivenessTypes = "1,2,3,4,5" //动作活体种类用英文","隔开； 1.张张嘴 2.微笑 3.眨眨眼 4.摇头 5.点头
     private var faceLivenessType = FaceLivenessType.MOTION  //活体检测类型.20251220  新加 MOTION_COLOR_FLASH炫彩活体
+    private var allowRetry = true //timeout时是否允许retry
     private val faceVerifyUtils = FaceVerifyUtils()
     private lateinit var tipsTextView: TextView
     private lateinit var secondTipsTextView: TextView
@@ -114,28 +119,37 @@ class FaceVerificationActivity : AbsBaseActivity() {
      * //人脸图片和人脸特征向量不方便传递，以及相关法律法规不允许明文传输。注意数据迁移
      */
     private fun initFaceVerifyFeature() {
-        //老的数据是float[] 需要转换为faceFeatureOld才能在新版本中使用
-        val faceEmbeddingOld = FaceEmbedding.loadEmbedding(baseContext, faceID)
-        val faceFeatureOld = FaceAISDKEngine.getInstance(this).faceArray2Feature(faceEmbeddingOld)
-
-        //从本地MMKV读取人脸特征值(2025.11.23版本使用MMKV，老的人脸数据请做好迁移)
-        val faceFeature = MMKV.defaultMMKV().decodeString(faceID)
-        if (!faceFeature.isNullOrEmpty()) {
-            initFaceVerificationParam(faceFeature)
-        } else if (!faceFeatureOld.isNullOrEmpty()) {
-            initFaceVerificationParam(faceFeatureOld)
-            MMKV.defaultMMKV().encode(faceID, faceFeatureOld) //从老的数据迁移到新的MMKV
+        // 优先使用Flutter直接传递的人脸特征值
+        if (!passedFaceFeature.isNullOrEmpty()) {
+            initFaceVerificationParam(passedFaceFeature!!)
         } else {
-            //根据你的业务进行提示去录入人脸 提取特征，服务器有提前同步到本地
-            Toast.makeText(baseContext, "FaceFeature isEmpty ! ", Toast.LENGTH_LONG).show()
+            //老的数据是float[] 需要转换为faceFeatureOld才能在新版本中使用
+            val faceEmbeddingOld = FaceEmbedding.loadEmbedding(baseContext, faceID)
+            val faceFeatureOld = FaceAISDKEngine.getInstance(this).faceArray2Feature(faceEmbeddingOld)
+
+            //从本地MMKV读取人脸特征值(2025.11.23版本使用MMKV，老的人脸数据请做好迁移)
+            val faceFeature = MMKV.defaultMMKV().decodeString(faceID)
+            if (!faceFeature.isNullOrEmpty()) {
+                initFaceVerificationParam(faceFeature)
+            } else if (!faceFeatureOld.isNullOrEmpty()) {
+                initFaceVerificationParam(faceFeatureOld)
+                MMKV.defaultMMKV().encode(faceID, faceFeatureOld) //从老的数据迁移到新的MMKV
+            } else {
+                //根据你的业务进行提示去录入人脸 提取特征，服务器有提前同步到本地
+                Toast.makeText(baseContext, "FaceFeature isEmpty ! ", Toast.LENGTH_LONG).show()
+            }
         }
 
         // 去Path 路径读取有没有faceID 对应的处理好的人脸Bitmap，不需要可删除
-        val faceFilePath = FaceSDKConfig.CACHE_BASE_FACE_DIR + faceID
-        val baseBitmap = BitmapFactory.decodeFile(faceFilePath)
-        Glide.with(baseContext).load(baseBitmap)
-            .transform(RoundedCorners(33))
-            .into(findViewById<ImageView>(R.id.base_face))
+        if (!faceID.isNullOrEmpty()) {
+            val faceFilePath = FaceSDKConfig.CACHE_BASE_FACE_DIR + faceID
+            val baseBitmap = BitmapFactory.decodeFile(faceFilePath)
+            if (baseBitmap != null) {
+                Glide.with(baseContext).load(baseBitmap)
+                    .transform(RoundedCorners(33))
+                    .into(findViewById<ImageView>(R.id.base_face))
+            }
+        }
     }
 
     /**
@@ -226,15 +240,20 @@ class FaceVerificationActivity : AbsBaseActivity() {
                 2 //VERIFY_FAILED
             }
             VoicePlayer.getInstance().addPayList(R.raw.verify_failed)
-            AlertDialog.Builder(this@FaceVerificationActivity)
-                .setTitle(R.string.face_verify_failed_title)
-                .setMessage(R.string.face_verify_failed)
-                .setCancelable(false)
-                .setPositiveButton(R.string.know) { _, _ ->
-                    finishFaceVerify(code, R.string.face_verify_result_failed, similarity, livenessValue)
-                }
-                .setNegativeButton(R.string.retry) { _, _ -> faceVerifyUtils.retryVerify() }
-                .show()
+            if (allowRetry) {
+                AlertDialog.Builder(this@FaceVerificationActivity)
+                    .setTitle(R.string.face_verify_failed_title)
+                    .setMessage(R.string.face_verify_failed)
+                    .setCancelable(false)
+                    .setPositiveButton(R.string.know) { _, _ ->
+                        finishFaceVerify(code, R.string.face_verify_result_failed, similarity, livenessValue)
+                    }
+                    .setNegativeButton(R.string.retry) { _, _ -> faceVerifyUtils.retryVerify() }
+                    .show()
+            } else {
+                faceVerifyUtils.destroyProcess()
+                finishFaceVerify(code, R.string.face_verify_result_failed, similarity, livenessValue)
+            }
         }
     }
 
@@ -259,17 +278,22 @@ class FaceVerificationActivity : AbsBaseActivity() {
 
                 // 动作活体检测超时
                 ALIVE_DETECT_TYPE_ENUM.MOTION_LIVE_TIMEOUT -> {
-                    AlertDialog.Builder(this)
-                        .setMessage(R.string.motion_liveness_detection_time_out)
-                        .setCancelable(false)
-                        .setPositiveButton(R.string.retry) { _, _ ->
-                            retryTime++
-                            if (retryTime > 1) {
-                                finishFaceVerify(4, R.string.face_verify_result_timeout)
-                            } else {
-                                faceVerifyUtils.retryVerify()
-                            }
-                        }.show()
+                    if (allowRetry) {
+                        AlertDialog.Builder(this)
+                            .setMessage(R.string.motion_liveness_detection_time_out)
+                            .setCancelable(false)
+                            .setPositiveButton(R.string.retry) { _, _ ->
+                                retryTime++
+                                if (retryTime > 1) {
+                                    finishFaceVerify(4, R.string.face_verify_result_timeout)
+                                } else {
+                                    faceVerifyUtils.retryVerify()
+                                }
+                            }.show()
+                    } else {
+                        faceVerifyUtils.destroyProcess()
+                        finishFaceVerify(4, R.string.face_verify_result_timeout)
+                    }
                 }
 
                 // 人脸识别处理中
@@ -444,8 +468,13 @@ class FaceVerificationActivity : AbsBaseActivity() {
         val intent = intent ?: return
         if (intent.hasExtra(USER_FACE_ID_KEY)) {
             faceID = intent.getStringExtra(USER_FACE_ID_KEY)
+        }
+
+        if (intent.hasExtra(USER_FACE_FEATURE)) {
+            passedFaceFeature = intent.getStringExtra(USER_FACE_FEATURE)
+            Log.d("FaceVerification", "faceFeature received from Flutter, length=${passedFaceFeature?.length ?: 0}")
         } else {
-            Toast.makeText(this, R.string.input_face_id_tips, Toast.LENGTH_LONG).show()
+            Log.d("FaceVerification", "faceFeature NOT received from Flutter, will use MMKV lookup")
         }
 
         if (intent.hasExtra(THRESHOLD_KEY)) {
@@ -472,6 +501,9 @@ class FaceVerificationActivity : AbsBaseActivity() {
         }
         if (intent.hasExtra(MOTION_LIVENESS_TYPES)) {
             motionLivenessTypes = intent.getStringExtra(MOTION_LIVENESS_TYPES) ?: motionLivenessTypes
+        }
+        if (intent.hasExtra(ALLOW_RETRY)) {
+            allowRetry = intent.getBooleanExtra(ALLOW_RETRY, true)
         }
     }
 
