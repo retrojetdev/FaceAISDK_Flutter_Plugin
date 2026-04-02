@@ -13,7 +13,8 @@ FaceAI SDK Flutter Plugin - Face verification, liveness detection, and face enro
   s.dependency 'Flutter'
   s.dependency 'FaceAISDK_Core'
   s.platform = :ios, '15.5'
+  s.static_framework = true
 
-  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
+  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386', 'BUILD_LIBRARY_FOR_DISTRIBUTION' => 'NO' }
   s.swift_version = '5.0'
 end
