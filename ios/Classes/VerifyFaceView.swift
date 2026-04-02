@@ -85,8 +85,15 @@ struct VerifyFaceView: View {
             .navigationBarHidden(true)
 
             if showToast {
-                let displayMessage = toastViewTips.isEmpty ? FaceAILocalization.localizedTip(for: viewModel.faceVerifyResult.code, defaultPrefix: "VerifyFace") : toastViewTips
                 let isSuccess = viewModel.faceVerifyResult.similarity > threshold && viewModel.faceVerifyResult.liveness > 0.8
+                let displayMessage: String
+                if !toastViewTips.isEmpty {
+                    displayMessage = toastViewTips
+                } else if isSuccess {
+                    displayMessage = FaceAILocalization.localizedTip(for: 62)  // Face Verification Successful
+                } else {
+                    displayMessage = FaceAILocalization.localizedTip(for: 63)  // Face Verification Failed
+                }
                 let toastStyle: ToastStyle = isSuccess ? .success : .failure
 
                 VStack {

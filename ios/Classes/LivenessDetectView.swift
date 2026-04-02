@@ -84,11 +84,14 @@ struct LivenessDetectView: View {
             if showToast {
                 let isSuccess = viewModel.faceVerifyResult.liveness > 0.8
                 let toastStyle: ToastStyle = isSuccess ? .success : .failure
+                let toastMessage = isSuccess
+                    ? FaceAILocalization.localizedTip(for: 61)  // Liveness Check Passed
+                    : FaceAILocalization.localizedTip(for: 63)  // Failed
 
                 VStack {
                     Spacer()
                     CustomToastView(
-                        message: FaceAILocalization.localizedTip(for: viewModel.faceVerifyResult.code, defaultPrefix: "LivenessDetect"),
+                        message: toastMessage,
                         style: toastStyle
                     )
                     .padding(.bottom, 77)
