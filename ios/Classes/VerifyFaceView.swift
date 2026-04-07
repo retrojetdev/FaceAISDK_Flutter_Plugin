@@ -27,7 +27,7 @@ struct VerifyFaceView: View {
     let onDismiss: (Int, Float, Float, UIImage?) -> Void
 
     private var toastOverlay: some View {
-        let isSuccess = viewModel.faceVerifyResult.similarity > threshold && viewModel.faceVerifyResult.liveness > 0.8
+        let isSuccess = viewModel.faceVerifyResult.similarity > threshold && viewModel.faceVerifyResult.liveness > 0.7
         let displayMessage: String = {
             if !toastViewTips.isEmpty {
                 return toastViewTips
