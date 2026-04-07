@@ -9,8 +9,8 @@ var FaceCameraSize: CGFloat {
 
 public struct AddFaceByCamera: View {
     let faceID: String
-    // callback: (code, faceFeature?, faceImage?)
-    let onDismiss: (Int, String?, UIImage?) -> Void
+    // callback: (code, faceFeature, faceImage?)
+    let onDismiss: (Int, String, UIImage?) -> Void
     var autoControlBrightness: Bool = true
     var dismissAction: (() -> Void)? = nil
     var needConfirmAddFace: Bool = true
