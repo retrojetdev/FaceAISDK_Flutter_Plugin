@@ -32,6 +32,11 @@ android {
 
     compileSdk = 36
 
+    aaptOptions {
+        // noCompress model
+        noCompress "bin", "param", "tflite", "model"
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
