@@ -47,7 +47,7 @@ class _VerifyPageState extends State<VerifyPage> {
       final result = await _faceAiSdk.startVerification(
         faceFeature: face.faceFeature.isNotEmpty ? face.faceFeature : null,
         faceId: null,
-        livenessType: 2,
+        livenessType: 1,
         motionStepSize: 2,
         allowRetry: false
       );

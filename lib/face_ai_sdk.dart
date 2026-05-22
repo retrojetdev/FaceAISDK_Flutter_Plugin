@@ -8,8 +8,10 @@ class FaceAiSdk {
   /// Initialize the FaceAI SDK. Must be called before any other method.
   ///
   /// [config] - Configuration map. Supported keys:
-  ///   - `locale` (String) - iOS only. Sets UI language for face views.
-  ///     Supported: "en" (default), "id", "zh-Hans".
+  ///   - `locale` (String) - Sets UI/voice language.
+  ///     iOS: "en" (default), "id", "zh-Hans".
+  ///     Android: "en" (default), "id". When "id" is set, voice prompts use
+  ///     the `id_`-prefixed audio files in `android/src/main/res/raw/` if available.
   Future<String> initializeSDK(Map<String, dynamic> config) {
     return FaceAiSdkPlatform.instance.initializeSDK(config);
   }
@@ -31,7 +33,7 @@ class FaceAiSdk {
     String? faceId,
     String? faceFeature,
     double threshold = 0.85,
-    int livenessType = 0,
+    int livenessType = 1,
     int motionStepSize = 1,
     int motionTimeout = 10,
     String motionTypes = "1,2,3,4,5",

@@ -3,7 +3,6 @@ package com.faceAI.face_ai_sdk.base.utils
 import android.content.Context
 import android.media.MediaPlayer
 import androidx.annotation.RawRes
-import java.util.Locale
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
@@ -96,20 +95,23 @@ class VoicePlayer private constructor() {
     }
 
     /**
-     * Resolve raw resource ID based on device locale.
-     * If locale is Indonesian ("id"/"in"), try to find "id_" prefixed version.
+     * Resolve raw resource ID based on SDK locale set via initializeSDK(locale: ...).
+     * If locale is "id", try to find "id_" prefixed version of the resource.
      *
      * Usage: VoicePlayer.getInstance().play(VoicePlayer.localized(context, R.raw.blink))
-     * On Indonesian device → plays R.raw.id_blink if it exists, otherwise R.raw.blink
+     * When locale = "id" → plays R.raw.id_blink if it exists, otherwise R.raw.blink
      */
     companion object {
+        @JvmStatic
+        @Volatile
+        var sdkLocale: String = "en"
+
         @JvmStatic
         fun getInstance(): VoicePlayer = Factory.INSTANCE
 
         @JvmStatic
         fun localized(context: Context, @RawRes defaultResId: Int): Int {
-            val lang = Locale.getDefault().language
-            if (lang != "id" && lang != "in") return defaultResId
+            if (sdkLocale != "id") return defaultResId
 
             val res = context.resources
             val defaultName = res.getResourceEntryName(defaultResId)
