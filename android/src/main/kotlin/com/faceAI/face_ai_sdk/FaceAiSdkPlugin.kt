@@ -22,7 +22,6 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import com.faceAI.face_ai_sdk.SysCamera.verify.FaceVerificationActivity
 import com.faceAI.face_ai_sdk.SysCamera.verify.LivenessDetectActivity
 import com.faceAI.face_ai_sdk.SysCamera.addFace.AddFaceFeatureActivity
-import com.faceAI.face_ai_sdk.base.utils.VoicePlayer
 import java.io.ByteArrayOutputStream
 import java.io.File
 
@@ -102,7 +101,6 @@ class FaceAiSdkPlugin :
         try {
             val appContext = currentActivity.applicationContext
             FaceSDKConfig.init(appContext)
-            VoicePlayer.sdkLocale = call.argument<String>("locale") ?: "en"
             isSDKInitialized = true
             result.success("SDK initialized successfully")
         } catch (e: Exception) {
